@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
-import io
 
 st.title("🎓 Automated Certificate Generator")
 
@@ -17,7 +16,7 @@ if template_file and csv_file:
     data = pd.read_csv(csv_file)
     st.write("Preview of uploaded data:", data.head())
 
-    # Use safe font
+    # Use safe font for Streamlit Cloud
     try:
         font = ImageFont.truetype("DejaVuSans-Bold.ttf", 60)
     except:
@@ -32,13 +31,27 @@ if template_file and csv_file:
         cert = template.copy()
         draw = ImageDraw.Draw(cert)
 
-        # Calculate center position for the name
-        text_width, text_height = draw.textsize(name, font=font)
         image_width, image_height = cert.size
-        name_position = ((image_width - text_width) / 2, image_height * 0.5)
+
+        # --- Name ---
+        bbox_name = draw.textbbox((0,0), name, font=font)
+        name_width = bbox_name[2] - bbox_name[0]
+        name_position = ((image_width - name_width) / 2, image_height * 0.45)
+
+        # --- Course ---
+        bbox_course = draw.textbbox((0,0), course, font=font)
+        course_width = bbox_course[2] - bbox_course[0]
+        course_position = ((image_width - course_width) / 2, image_height * 0.55)
+
+        # --- Date ---
+        bbox_date = draw.textbbox((0,0), date, font=font)
+        date_width = bbox_date[2] - bbox_date[0]
+        date_position = ((image_width - date_width) / 2, image_height * 0.65)
 
         # Draw text
         draw.text(name_position, name, fill="black", font=font)
+        draw.text(course_position, course, fill="black", font=font)
+        draw.text(date_position, date, fill="black", font=font)
 
-        # Preview on Streamlit
+        # Show certificate preview in Streamlit
         st.image(cert, caption=f"Preview: {name}", use_column_width=True)
