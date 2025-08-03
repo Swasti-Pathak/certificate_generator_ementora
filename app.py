@@ -15,26 +15,13 @@ if template_file and csv_file:
     # Load template and data
     template = Image.open(template_file)
     data = pd.read_csv(csv_file)
-
     st.write("Preview of uploaded data:", data.head())
 
-    from PIL import ImageFont
-
-try:
-    # Try default DejaVuSans (works on Streamlit Cloud)
-    font = ImageFont.truetype("DejaVuSans-Bold.ttf", 60)
-except:
-    # Fallback to a default PIL font if the file is missing
-    font = ImageFont.load_default()
-
-
-    pdf_buffer = io.BytesIO()  # For combined PDF
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import letter
-    from reportlab.lib.units import inch
-
-    from reportlab.pdfgen.canvas import Canvas
-    from reportlab.lib.pagesizes import A4
+    # Use safe font
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 60)
+    except:
+        font = ImageFont.load_default()
 
     st.write("Generating certificates...")
 
@@ -45,15 +32,13 @@ except:
         cert = template.copy()
         draw = ImageDraw.Draw(cert)
 
-        # Add text (adjust coordinates)
-        draw.text((500, 300), name, fill="black", font=font)
-        draw.text((500, 400), course, fill="black", font=font)
-        draw.text((500, 500), date, fill="black", font=font)
+        # Calculate center position for the name
+        text_width, text_height = draw.textsize(name, font=font)
+        image_width, image_height = cert.size
+        name_position = ((image_width - text_width) / 2, image_height * 0.5)
 
-        # Save each as PDF in memory
-        img_buffer = io.BytesIO()
-        cert.save(img_buffer, format='PDF')
+        # Draw text
+        draw.text(name_position, name, fill="black", font=font)
 
+        # Preview on Streamlit
         st.image(cert, caption=f"Preview: {name}", use_column_width=True)
-
-    st.success("✅ Certificates generated! You can now download them individually.")
