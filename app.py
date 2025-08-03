@@ -18,7 +18,15 @@ if template_file and csv_file:
 
     st.write("Preview of uploaded data:", data.head())
 
-    font = ImageFont.truetype("arial.ttf", 60)  # Use Arial font, adjust size
+    from PIL import ImageFont
+
+try:
+    # Try default DejaVuSans (works on Streamlit Cloud)
+    font = ImageFont.truetype("DejaVuSans-Bold.ttf", 60)
+except:
+    # Fallback to a default PIL font if the file is missing
+    font = ImageFont.load_default()
+
 
     pdf_buffer = io.BytesIO()  # For combined PDF
     from reportlab.pdfgen import canvas
